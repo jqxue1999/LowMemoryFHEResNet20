@@ -101,7 +101,8 @@ void FHEController::generate_context(int log_ring, int log_scale, int log_primes
     num_slots = 1 << 14;
 
     parameters.SetSecretKeyDist(SPARSE_TERNARY);
-    parameters.SetSecurityLevel(lbcrypto::HEStd_128_classic);
+//    parameters.SetSecurityLevel(lbcrypto::HEStd_128_classic);
+    parameters.SetSecurityLevel(SecurityLevel::HEStd_NotSet);
     parameters.SetNumLargeDigits(digits_hks);
     parameters.SetRingDim(1 << log_ring);
     parameters.SetBatchSize(num_slots);
@@ -120,7 +121,7 @@ void FHEController::generate_context(int log_ring, int log_scale, int log_primes
 
     uint32_t approxBootstrapDepth = 4 + 4; //During EvalRaise, Chebyshev, DoubleAngle
 
-    uint32_t levelsUsedBeforeBootstrap = get_relu_depth(relu_deg) + 3;
+    uint32_t levelsUsedBeforeBootstrap = get_relu_depth(relu_deg) + 4;
 
     //<relu_degree> is at class-level, <relu_deg> is the input of the function
     relu_degree = relu_deg;
@@ -753,19 +754,15 @@ Ctxt FHEController::convbn(const Ctxt &in, int layer, int n, double scale, bool 
 
     //TODO: combinations of rotations in order to perform only 8 rotations
 
-    c_rotations.push_back(
-            context->EvalRotate(context->EvalFastRotation(in, -padding, context->GetCyclotomicOrder(), digits), -img_width ));
+    c_rotations.push_back(context->EvalRotate(context->EvalFastRotation(in, -padding, context->GetCyclotomicOrder(), digits), -img_width ));
     c_rotations.push_back(context->EvalFastRotation(in, -img_width, context->GetCyclotomicOrder(), digits));
-    c_rotations.push_back(
-            context->EvalRotate(context->EvalFastRotation(in, padding, context->GetCyclotomicOrder(), digits), -img_width ));
+    c_rotations.push_back(context->EvalRotate(context->EvalFastRotation(in, padding, context->GetCyclotomicOrder(), digits), -img_width ));
     c_rotations.push_back(context->EvalFastRotation(in, -padding, context->GetCyclotomicOrder(), digits));
     c_rotations.push_back(in);
     c_rotations.push_back(context->EvalFastRotation(in, padding, context->GetCyclotomicOrder(), digits));
-    c_rotations.push_back(
-            context->EvalRotate(context->EvalFastRotation(in, -padding, context->GetCyclotomicOrder(), digits), img_width));
+    c_rotations.push_back(context->EvalRotate(context->EvalFastRotation(in, -padding, context->GetCyclotomicOrder(), digits), img_width));
     c_rotations.push_back(context->EvalFastRotation(in, img_width, context->GetCyclotomicOrder(), digits));
-    c_rotations.push_back(
-            context->EvalRotate(context->EvalFastRotation(in, padding, context->GetCyclotomicOrder(), digits), img_width ));
+    c_rotations.push_back(context->EvalRotate(context->EvalFastRotation(in, padding, context->GetCyclotomicOrder(), digits), img_width ));
 
     Ptxt bias = encode(read_values_from_file("../weights/layer" + to_string(layer) + "-conv" + to_string(n) + "bn" + to_string(n) + "-bias.bin", scale), in->GetLevel(), 16384);
 
